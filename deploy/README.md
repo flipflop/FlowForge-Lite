@@ -1,3 +1,5 @@
+**First time:** create the scoped deploy user in [SETUP-AWS-USER.md](SETUP-AWS-USER.md) (policy: [deployer-policy.json](deployer-policy.json)).
+
 # Deploy: CloudFront + S3 (frontend) + Lambda (API)
 
 One SAM stack, one CloudFront distribution. The page and the API share an origin, so the

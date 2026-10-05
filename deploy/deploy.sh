@@ -55,6 +55,12 @@ if [[ "$mode" != "--static-only" ]]; then
     printf '\nORIGIN_VERIFY_SECRET=%s\n' "$ORIGIN_VERIFY_SECRET" >> "$here/deploy.env"
     echo "generated ORIGIN_VERIFY_SECRET (saved to deploy/deploy.env)"
   fi
+  status="$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || true)"
+  case "$status" in
+    ROLLBACK_COMPLETE|ROLLBACK_FAILED|DELETE_FAILED)
+      echo "stack $STACK_NAME is $status and cannot be updated; delete it first (deploy/SETUP-AWS-USER.md, 'Recovering a failed first deploy')"
+      exit 1 ;;
+  esac
   build_api
 
   say "sam deploy"
