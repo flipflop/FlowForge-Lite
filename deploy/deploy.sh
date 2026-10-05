@@ -19,7 +19,11 @@ build_api() {
   rm -rf "$out"; mkdir -p "$out"
   # python-dotenv is local-dev only (main.py guards the import); boto3 is in the Lambda runtime.
   grep -v -i '^python-dotenv' "$root/backend/requirements.txt" > "$here/.build/requirements.lambda.txt"
-  python3 -m pip install -q -r "$here/.build/requirements.lambda.txt" \
+  # Isolated venv: pip --target still checks the caller's global site-packages and prints
+  # unrelated conflict warnings; a clean venv has nothing to conflict with.
+  local venv="$here/.build/venv"
+  [[ -x "$venv/bin/pip" ]] || python3 -m venv "$venv"
+  "$venv/bin/pip" install -q --disable-pip-version-check -r "$here/.build/requirements.lambda.txt" \
     --platform manylinux2014_aarch64 --implementation cp --python-version 3.12 \
     --only-binary=:all: --target "$out"
   cp "$root"/backend/*.py "$out/"
@@ -54,6 +58,10 @@ if [[ "$mode" != "--static-only" ]]; then
   build_api
 
   say "sam deploy"
+  # sam rejects empty values (`HostName=`), so optional parameters are added only when set.
+  optional=()
+  [[ -n "${HOST_NAME:-}" ]] && optional+=("HostName=$HOST_NAME")
+  [[ -n "${CERTIFICATE_ARN:-}" ]] && optional+=("CertificateArn=$CERTIFICATE_ARN")
   # Each override is its own argv element, so the secret needs no shell quoting. It is hex only.
   sam deploy --template-file "$here/template.yaml" --stack-name "$STACK_NAME" \
     --region "$AWS_REGION" --resolve-s3 --capabilities CAPABILITY_IAM \
@@ -63,7 +71,7 @@ if [[ "$mode" != "--static-only" ]]; then
       "SsmPrefix=${SSM_PREFIX:-/flowforge-lite/prod}" \
       "ReservedConcurrency=${RESERVED_CONCURRENCY:-5}" \
       "RunsPerHour=${RUNS_PER_HOUR:-10}" \
-      "HostName=${HOST_NAME:-}" "CertificateArn=${CERTIFICATE_ARN:-}"
+      ${optional[@]+"${optional[@]}"}
 fi
 
 out() { aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
