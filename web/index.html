@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FlowForge</title>
+    <meta name="description" content="FlowForge — Visual Workflow Builder" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <script>
+      (function () {
+        try {
+          var t = new URLSearchParams(location.search).get("theme");
+          if (t !== "light" && t !== "dark") { try { t = localStorage.getItem("ff-theme"); } catch (e) { t = null; } }
+          if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>FlowForge needs JavaScript. Serve this folder over HTTP (python3 -m http.server -d web) and reload.</noscript>
+    <div id="app"></div>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

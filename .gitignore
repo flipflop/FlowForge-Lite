@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+node_modules/
+build/
+.pytest_cache/
+.DS_Store
+DS_Store*
+.env*
+!.env.example
+*.zip
+*.pdf
+.vscode/
+
+# Local-only: third-party design references (unknown licence), deploy config with account identifiers
+Reference/
+FlowForge-main/
+deploy/deploy.env
+deploy/.build/
+.aws-sam/

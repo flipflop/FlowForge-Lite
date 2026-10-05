@@ -1,0 +1,241 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  FlowForge on one CloudFront distribution: the static frontend (web/) from a private S3 bucket
+  through Origin Access Control, and the FastAPI backend on Lambda (Function URL, response
+  streaming) under /pipelines/*, /models and /health. Deploy with deploy/deploy.sh (SAM).
+  No account-specific values live in this file; they come from pseudo parameters and
+  deploy/deploy.env (gitignored).
+
+Parameters:
+  OriginVerifySecret:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    Description: >
+      Shared secret CloudFront sends as x-origin-verify; the API rejects requests without it,
+      so the public Function URL cannot be used directly. deploy.sh generates it.
+  SsmPrefix:
+    Type: String
+    Default: /flowforge/prod
+    Description: >
+      SSM Parameter Store prefix holding optional server demo keys (SecureString):
+      <prefix>/gemini-api-key and <prefix>/anthropic-api-key. Written by deploy/set-secrets.sh.
+  ReservedConcurrency:
+    Type: Number
+    Default: 5
+    MinValue: 1
+    Description: Maximum concurrent API executions. Caps spend and provider load.
+  RunsPerHour:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    Description: Per-IP limit on LLM calls that use the server demo keys.
+  PriceClass:
+    Type: String
+    Default: PriceClass_All
+    AllowedValues: [PriceClass_100, PriceClass_200, PriceClass_All]
+    Description: CloudFront edge coverage. All keeps Australian and Asian viewers close.
+  HostName:
+    Type: String
+    Default: ""
+    Description: Optional custom hostname. Blank serves the distribution's own *.cloudfront.net URL.
+  CertificateArn:
+    Type: String
+    Default: ""
+    Description: ACM certificate for HostName. Must be in us-east-1. Blank uses the CloudFront default.
+
+Conditions:
+  HasCustomDomain: !And
+    - !Not [!Equals [!Ref HostName, ""]]
+    - !Not [!Equals [!Ref CertificateArn, ""]]
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-site-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      Tags: [{ Key: project, Value: !Ref AWS::StackName }]
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontOacRead
+            Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub "${SiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${SiteDistribution}"
+
+  SiteOac:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-site-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # Managed SecurityHeadersPolicy has no CSP; this one adds a strict CSP. The app ships no
+  # third-party code, so 'self' covers scripts, styles and fonts. 'unsafe-inline' for scripts
+  # is needed by the small pre-paint theme script in index.html; the html engine never uses
+  # inline handlers or eval.
+  SiteHeaders:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-site-headers"
+        SecurityHeadersConfig:
+          ContentSecurityPolicy:
+            Override: true
+            ContentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'"
+          ContentTypeOptions: { Override: true }
+          FrameOptions: { FrameOption: DENY, Override: true }
+          ReferrerPolicy: { ReferrerPolicy: strict-origin-when-cross-origin, Override: true }
+          StrictTransportSecurity: { AccessControlMaxAgeSec: 63072000, IncludeSubdomains: true, Preload: false, Override: true }
+          XSSProtection: { Protection: true, ModeBlock: true, Override: true }
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-api"
+      RetentionInDays: 14
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: ApiLogGroup
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-api"
+      CodeUri: ./.build/api
+      Handler: run.sh
+      Runtime: python3.12
+      Architectures: [arm64]
+      MemorySize: 512
+      Timeout: 300
+      ReservedConcurrentExecutions: !Ref ReservedConcurrency
+      Layers:
+        # AWS Lambda Web Adapter (awslabs), pinned. https://github.com/awslabs/aws-lambda-web-adapter
+        - !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerArm64:30"
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+          SSM_PREFIX: !Ref SsmPrefix
+          RUNS_PER_HOUR: !Ref RunsPerHour
+          ORIGIN_VERIFY_SECRET: !Ref OriginVerifySecret
+      Policies:
+        - Statement:
+            - Sid: ReadDemoKeys
+              Effect: Allow
+              Action: [ssm:GetParameter, ssm:GetParameters]
+              Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmPrefix}/*"
+            - Sid: DecryptDemoKeys
+              Effect: Allow
+              Action: kms:Decrypt
+              Resource: !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub "ssm.${AWS::Region}.amazonaws.com"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  # Since Oct 2025 a public Function URL also needs lambda:InvokeFunction for URL callers.
+  ApiInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApiFunction
+      Action: lambda:InvokeFunction
+      Principal: "*"
+      InvokedViaFunctionUrl: true
+
+  SiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub "${AWS::StackName} static frontend"
+        Enabled: true
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: !Ref PriceClass
+        DefaultRootObject: index.html
+        Aliases: !If [HasCustomDomain, [!Ref HostName], !Ref AWS::NoValue]
+        ViewerCertificate: !If
+          - HasCustomDomain
+          - { AcmCertificateArn: !Ref CertificateArn, SslSupportMethod: sni-only, MinimumProtocolVersion: TLSv1.2_2021 }
+          - { CloudFrontDefaultCertificate: true }
+        Origins:
+          - Id: site
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt SiteOac.Id
+            S3OriginConfig: { OriginAccessIdentity: "" }
+          - Id: api
+            # Function URL looks like https://<id>.lambda-url.<region>.on.aws/ : keep only the host.
+            DomainName: !Select [2, !Split ["/", !GetAtt ApiFunctionUrl.FunctionUrl]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+              OriginReadTimeout: 60
+            OriginCustomHeaders:
+              - { HeaderName: x-origin-verify, HeaderValue: !Ref OriginVerifySecret }
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6          # Managed-CachingOptimized
+          ResponseHeadersPolicyId: !Ref SiteHeaders
+        CacheBehaviors:
+          - PathPattern: /pipelines/*
+            TargetOriginId: api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+            CachedMethods: [GET, HEAD]
+            Compress: false
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad          # Managed-CachingDisabled
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # Managed-AllViewerExceptHostHeader
+            ResponseHeadersPolicyId: !Ref SiteHeaders
+          - PathPattern: /models
+            TargetOriginId: api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+            CachedMethods: [GET, HEAD]
+            Compress: false
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+            ResponseHeadersPolicyId: !Ref SiteHeaders
+          - PathPattern: /health
+            TargetOriginId: api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+            CachedMethods: [GET, HEAD]
+            Compress: false
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+            ResponseHeadersPolicyId: !Ref SiteHeaders
+        # No CustomErrorResponses: they apply to every behaviour, so they would turn the API's
+        # JSON 403/404s into the HTML app shell. The app has no client-side routes to rescue.
+
+Outputs:
+  BucketName: { Value: !Ref SiteBucket }
+  FunctionName: { Value: !Ref ApiFunction }
+  DistributionId: { Value: !Ref SiteDistribution }
+  SiteUrl: { Value: !If [HasCustomDomain, !Sub "https://${HostName}", !Sub "https://${SiteDistribution.DomainName}"] }

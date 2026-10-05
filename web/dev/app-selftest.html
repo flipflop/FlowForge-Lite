@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- app-selftest.html — integration checks against the REAL app (index.html?example=1) in an iframe.
+     Open in a browser, or: chrome --headless=new --dump-dom http://localhost:PORT/dev/app-selftest.html | grep '<title>' -->
+<html lang="en"><head><meta charset="utf-8"><title>APP SELFTEST RUNNING</title></head>
+<body><iframe id="f" src="../index.html?example=1&theme=light" style="width:1440px;height:900px;border:0"></iframe>
+<pre id="log"></pre>
+<script type="module">
+const f = document.getElementById('f');
+const log = [];
+const check = (name, ok) => log.push(`${ok ? 'PASS' : 'FAIL'} ${name}`);
+const tick = (ms = 120) => new Promise(r => setTimeout(r, ms));
+f.addEventListener('load', async () => {
+  await tick(600);
+  const d = f.contentDocument, w = f.contentWindow;
+  const wires = () => d.querySelectorAll('.ff-wire[data-edge]').length;
+  const textCard = d.querySelector('.ff-node [data-handle="text-1-output"]')?.closest('.ff-node');
+  check('example loaded: 4 nodes', d.querySelectorAll('.ff-node').length === 4);
+  check('example loaded: 3 wires', wires() === 3);
+  const ta = textCard?.querySelector('textarea');
+  ta.focus();
+  const type = (v) => { ta.value = v; ta.dispatchEvent(new w.Event('input', { bubbles: true })); };
+  type('Hello {{name}} and {{place}}');
+  await tick();
+  const inPorts = [...textCard.querySelectorAll('.ff-port--in')].map(p => p.dataset.handle).sort();
+  check('text vars become input ports', JSON.stringify(inPorts) === '["text-1-name","text-1-place"]');
+  check('textarea keeps focus while typing', d.activeElement === ta);
+  check('same textarea element (no remount)', textCard.querySelector('textarea') === ta);
+  // wires redraw on the next animation frame; wait for one (fallback timer for idle headless tabs)
+  await new Promise(r => { w.requestAnimationFrame(() => r()); setTimeout(r, 1500); });
+  check('edge to removed {{topic}} port pruned', wires() === 2);
+  const llmBefore = d.querySelector('[data-handle="llm-1-prompt"]').closest('.ff-node');
+  d.querySelector('[data-handle="llm-1-response"]').closest('.ff-node').querySelector('select, .ff-select__trigger')?.click();
+  check('LLM card not remounted by other edits', d.querySelector('[data-handle="llm-1-prompt"]').closest('.ff-node') === llmBefore);
+  d.querySelector('.ff-header [aria-label*="theme" i], .ff-header [aria-label*="dark" i], .ff-header [aria-label*="light" i]')?.click();
+  await tick(400);
+  check('theme toggle flips data-theme', d.documentElement.dataset.theme === 'dark');
+  [...d.querySelectorAll('button')].find(b => /clear/i.test(b.textContent))?.click();
+  await tick();
+  check('clear canvas removes nodes', d.querySelectorAll('.ff-node').length === 0);
+  check('empty state shown', !!d.querySelector('.ff-empty'));
+  [...d.querySelectorAll('button')].find(b => /example/i.test(b.textContent))?.click();
+  await tick(300);
+  check('load example from empty state', d.querySelectorAll('.ff-node').length === 4);
+  const fails = log.filter(l => l.startsWith('FAIL')).length;
+  document.getElementById('log').textContent = log.join('\n');
+  document.title = fails ? `APP SELFTEST FAIL ${fails}/${log.length}` : `APP SELFTEST PASS ${log.length}/${log.length}`;
+});
+</script></body></html>

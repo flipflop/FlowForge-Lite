@@ -1,0 +1,457 @@
+/* app.css — layout + component styles (Clay Workbench). Consumes only tokens. See docs/design.md. */
+/* ════════════════════════════════════════════════════════
+   App shell
+   ════════════════════════════════════════════════════════ */
+.ff-app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--ground); }
+.ff-header {
+  position: relative; z-index: 20; height: 60px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4);
+  padding: 0 var(--sp-5);
+  background: var(--ground-2);
+  box-shadow: inset 0 -1px 0 var(--rule), 0 8px 18px -14px rgba(var(--shade-rgb), .35);
+}
+.ff-brand { display: flex; align-items: center; gap: 10px; }
+.ff-brand__mark {
+  width: 30px; height: 30px; border-radius: 9px; position: relative;
+  background: linear-gradient(150deg, var(--face-hi), var(--face));
+  box-shadow: inset 0 1px 0 var(--rim), 0 3px 0 var(--edge), 0 3px 0 1px rgba(var(--shade-rgb), .06),
+              3px 7px 10px -4px rgba(var(--shade-rgb), .35);
+}
+.ff-brand__mark::after { /* the hub bead */
+  content: ""; position: absolute; inset: 9px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8 0 18%, var(--accent) 55%, var(--accent-deep));
+  box-shadow: 1px 2px 3px rgba(var(--shade-rgb), .35);
+}
+.ff-brand__name {
+  font-family: var(--font-display); font-weight: 900; font-size: var(--fs-xl);
+  letter-spacing: -0.03em; line-height: 1; text-transform: uppercase; color: var(--ink);
+}
+.ff-brand__name em { font-style: normal; color: var(--accent); }
+.ff-brand__tag { margin-left: 4px; }
+.ff-header__actions { display: flex; align-items: center; gap: var(--sp-2); }
+.ff-header__sep { width: 1px; height: 24px; background: var(--rule); margin: 0 var(--sp-1); }
+
+.ff-main { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+.ff-main--top { flex-direction: column; }
+.ff-canvas { flex: 1; position: relative; overflow: hidden; min-width: 0; }
+
+/* ════════════════════════════════════════════════════════
+   Buttons — tactile keys (after Reference/CSS-Push-Button)
+   ════════════════════════════════════════════════════════ */
+.ff-btn {
+  --btn-face: var(--face); --btn-face-hi: var(--face-hi); --btn-edge: var(--edge); --btn-fg: var(--ink);
+  appearance: none; border: 0; cursor: pointer; position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 34px; padding: 0 14px; border-radius: var(--r-pill);
+  font-family: var(--font-ui); font-size: var(--fs-sm); font-weight: 700; letter-spacing: -0.005em;
+  color: var(--btn-fg);
+  background: linear-gradient(160deg, var(--btn-face-hi), var(--btn-face));
+  box-shadow:
+    inset 0 1px 0 var(--rim),
+    inset 0 -1px 0 rgba(var(--shade-rgb), .06),
+    0 3px 0 var(--btn-edge),
+    2px 6px 10px -4px rgba(var(--shade-rgb), .35);
+  transform: translateY(0);
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease), filter var(--t-fast);
+  white-space: nowrap; user-select: none;
+}
+.ff-btn:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 var(--rim), inset 0 -1px 0 rgba(var(--shade-rgb), .06), 0 4px 0 var(--btn-edge), 3px 9px 14px -5px rgba(var(--shade-rgb), .4); }
+.ff-btn:active { transform: translateY(3px); box-shadow: inset 1px 2px 4px rgba(var(--shade-rgb), .25), 0 0 0 var(--btn-edge), 0 0 0 rgba(0,0,0,0); }
+.ff-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.ff-btn svg { flex-shrink: 0; }
+.ff-btn--primary { --btn-face: #1B2944; --btn-face-hi: #2C3B5A; --btn-edge: #0B1426; --btn-fg: #F6F3EC; }
+.ff-btn--accent  { --btn-face: var(--accent); --btn-face-hi: #F08670; --btn-edge: var(--accent-deep); --btn-fg: #FFFDF9; }
+:root[data-theme="dark"] .ff-btn--primary { --btn-face: #DCD7CC; --btn-face-hi: #F2EEE6; --btn-edge: #9C978D; --btn-fg: #11151D; }
+:root[data-theme="dark"] .ff-btn--accent  { --btn-face-hi: #F59580; --btn-edge: #A8432F; --btn-fg: #1A0F0C; }
+.ff-btn--go { --btn-face: var(--go); --btn-face-hi: var(--go-hi); --btn-edge: var(--go-deep); --btn-fg: var(--on-go); }
+.ff-btn--primary, .ff-btn--accent, .ff-btn--go { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 3px 0 var(--btn-edge), 2px 6px 12px -4px rgba(var(--shade-rgb), .45); }
+.ff-btn--ghost { background: transparent; box-shadow: none; color: var(--ink-2); }
+.ff-btn--ghost:hover { background: var(--face-2); box-shadow: none; transform: none; color: var(--ink); }
+.ff-btn--danger:hover { color: var(--accent-deep); }
+.ff-btn--icon { width: 34px; padding: 0; }
+.ff-btn--sm { height: 28px; padding: 0 11px; font-size: var(--fs-xs); }
+.ff-btn__badge {
+  font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: var(--r-pill);
+  background: var(--st-done-bg); color: var(--st-done-fg);
+}
+.ff-btn.is-running::before { /* breathing halo while the pipeline runs */
+  content: ""; position: absolute; inset: -4px; border-radius: inherit;
+  border: 2px solid var(--btn-face); opacity: .5; animation: ff-breathe 1.4s var(--ease) infinite;
+}
+
+/* Segmented control (layout switch) */
+.ff-seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--r-pill); background: var(--well);
+  box-shadow: inset 1px 2px 4px rgba(var(--shade-rgb), .14), inset 0 -1px 0 var(--rim); }
+.ff-seg button {
+  appearance: none; border: 0; background: transparent; cursor: pointer; color: var(--ink-3);
+  height: 28px; width: 32px; border-radius: var(--r-pill); display: grid; place-items: center;
+  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+.ff-seg button[aria-pressed="true"] { background: var(--face); color: var(--ink);
+  box-shadow: inset 0 1px 0 var(--rim), 0 2px 0 var(--edge), 1px 3px 6px -2px rgba(var(--shade-rgb), .3); }
+
+/* ════════════════════════════════════════════════════════
+   Palette (toolbar) — keys you pick up off the bench
+   ════════════════════════════════════════════════════════ */
+.ff-palette { flex-shrink: 0; background: var(--ground-2); position: relative; z-index: 5; }
+.ff-palette--top { height: 96px; box-shadow: inset 0 -1px 0 var(--rule); }
+.ff-palette--side { width: 112px; box-shadow: inset -1px 0 0 var(--rule); }
+.ff-palette__scroll { height: 100%; display: flex; gap: var(--sp-6); scrollbar-width: none; }
+.ff-palette__scroll::-webkit-scrollbar { display: none; }
+.ff-palette--top .ff-palette__scroll { align-items: center; padding: 0 var(--sp-5); overflow-x: auto; }
+.ff-palette--side .ff-palette__scroll { flex-direction: column; align-items: center; padding: var(--sp-5) 0; overflow-y: auto; }
+.ff-palette__group { display: flex; gap: var(--sp-3); align-items: center; }
+.ff-palette--side .ff-palette__group { flex-direction: column; }
+.ff-palette__label { writing-mode: vertical-rl; transform: rotate(180deg); }
+.ff-palette--side .ff-palette__label { writing-mode: horizontal-tb; transform: none; }
+.ff-palette__keys { display: flex; gap: 10px; }
+.ff-palette--side .ff-palette__keys { flex-direction: column; }
+
+.ff-key {
+  width: 68px; height: 64px; border-radius: var(--r-md); cursor: grab; user-select: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: linear-gradient(155deg, var(--face-hi), var(--face) 60%);
+  box-shadow: inset 0 1px 0 var(--rim), 0 4px 0 var(--edge), 0 4px 0 1px rgba(var(--shade-rgb), .05),
+              3px 9px 12px -6px rgba(var(--shade-rgb), .35);
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.ff-key:hover { transform: translateY(-2px) rotate(-1deg);
+  box-shadow: inset 0 1px 0 var(--rim), 0 6px 0 var(--edge), 5px 14px 18px -8px rgba(var(--shade-rgb), .45); }
+.ff-key:active { cursor: grabbing; transform: translateY(2px); box-shadow: inset 0 1px 0 var(--rim), 0 1px 0 var(--edge), 1px 2px 4px rgba(var(--shade-rgb), .2); }
+.ff-key__label { font-size: var(--fs-2xs); font-weight: 700; color: var(--ink-2); letter-spacing: 0.01em; }
+
+/* Category chip: the coloured square from the reference cards */
+.ff-chip {
+  width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0; display: grid; place-items: center;
+  color: #fff;
+  background: linear-gradient(150deg, color-mix(in oklch, var(--cat), white 18%), var(--cat) 60%, color-mix(in oklch, var(--cat), black 12%));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.12), 1px 2px 4px -1px rgba(var(--shade-rgb), .4);
+}
+:root[data-theme="dark"] .ff-chip { color: #11151D; }
+.ff-chip--sm { width: 22px; height: 22px; border-radius: 6px; }
+.ff-chip svg { stroke: currentColor !important; }
+
+/* category assignment — set on any element, children read --cat */
+[data-cat="source"] { --cat: var(--cat-source); }
+[data-cat="model"]  { --cat: var(--cat-model); }
+[data-cat="shape"]  { --cat: var(--cat-shape); }
+[data-cat="check"]  { --cat: var(--cat-check); }
+[data-cat="sink"]   { --cat: var(--cat-sink); }
+
+/* ════════════════════════════════════════════════════════
+   Node — the clay slab
+   ════════════════════════════════════════════════════════ */
+.ff-node {
+  position: relative; border-radius: var(--r-lg); font-family: var(--font-ui); color: var(--ink);
+  background: linear-gradient(165deg, var(--face-hi) 0%, var(--face) 40%);
+  box-shadow:
+    inset 0 1px 0 var(--rim),                         /* lit top edge */
+    inset 1px 0 0 var(--rim),                         /* lit left edge */
+    inset 0 -1px 0 rgba(var(--shade-rgb), .05),
+    0 var(--slab) 0 0 var(--edge),                    /* slab thickness */
+    0 calc(var(--slab) + 1px) 0 0 rgba(var(--shade-rgb), .08),
+    0 calc(var(--slab) + 5px) 0 -3px var(--edge-2),   /* sheet stacked beneath */
+    0 calc(var(--slab) + 6px) 0 -3px rgba(var(--shade-rgb), .08),
+    10px 22px 30px -10px rgba(var(--shade-rgb), .28), /* cast shadow, lamp top-left */
+    3px 6px 10px -4px rgba(var(--shade-rgb), .14);
+  transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+}
+.ff-node:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 var(--rim), inset 1px 0 0 var(--rim), inset 0 -1px 0 rgba(var(--shade-rgb), .05),
+    0 var(--slab) 0 0 var(--edge), 0 calc(var(--slab) + 1px) 0 0 rgba(var(--shade-rgb), .08),
+    0 calc(var(--slab) + 5px) 0 -3px var(--edge-2), 0 calc(var(--slab) + 6px) 0 -3px rgba(var(--shade-rgb), .08),
+    16px 32px 40px -12px rgba(var(--shade-rgb), .32), 4px 8px 14px -4px rgba(var(--shade-rgb), .16);
+}
+.ff-node.is-dragging { transform: translateY(-6px) rotate(-0.6deg); }
+.ff-node.is-selected { outline: 2px solid var(--cat); outline-offset: 4px; }
+.ff-node.is-running { outline: 2px dashed var(--st-work-fg); outline-offset: 4px; }
+.ff-node.is-error   { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+/* category spine — a thin coloured lip along the top, like a tab on a file card */
+.ff-node::before {
+  content: ""; position: absolute; left: 18px; right: 18px; top: 0; height: 3px; border-radius: 0 0 3px 3px;
+  background: var(--cat); opacity: .9;
+}
+
+.ff-node__head {
+  display: flex; align-items: center; gap: 10px; padding: 14px 14px 10px;
+}
+.ff-node__titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ff-node__title { font-size: var(--fs-md); font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; color: var(--ink); }
+.ff-node__id { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--ink-3); letter-spacing: 0.02em; white-space: nowrap; }
+.ff-node__close {
+  appearance: none; border: 0; background: transparent; cursor: pointer; color: var(--ink-3);
+  width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+  opacity: 0; transition: opacity var(--t-fast), background var(--t-fast), color var(--t-fast);
+}
+.ff-node:hover .ff-node__close, .ff-node__close:focus-visible { opacity: 1; }
+.ff-node__close:hover { background: var(--accent-soft); color: var(--accent-deep); }
+.ff-node__body {
+  display: flex; flex-direction: column; gap: 12px; padding: 4px 14px 16px;
+}
+.ff-node__divider { height: 1px; background: var(--rule); margin: 0 14px; }
+
+/* ── Status pill (WORKING / DONE / …) ───────────────── */
+.ff-pill {
+  display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 9px; border-radius: var(--r-pill);
+  font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  background: var(--st-ready-bg); color: var(--st-ready-fg);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(var(--shade-rgb), .06);
+}
+.ff-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .7; }
+.ff-pill--running { background: var(--st-work-bg); color: var(--st-work-fg); }
+.ff-pill--running::before { animation: ff-pulse 1s ease-in-out infinite; opacity: 1; }
+.ff-pill--done  { background: var(--st-done-bg); color: var(--st-done-fg); }
+.ff-pill--error { background: var(--st-wait-bg); color: var(--st-wait-fg); }
+.ff-pill--warn  { background: var(--st-warn-bg); color: var(--st-warn-fg); }
+
+/* ── Run output tray inside a node ─────────────────── */
+.ff-output {
+  font-family: var(--font-mono); font-size: var(--fs-2xs); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
+  max-height: 140px; overflow: auto; padding: 8px 10px; border-radius: var(--r-sm);
+  background: var(--st-done-bg); color: var(--st-done-fg);
+  box-shadow: inset 1px 2px 4px rgba(var(--shade-rgb), .12);
+}
+.ff-output--error { background: var(--st-wait-bg); color: var(--st-wait-fg); }
+
+/* ════════════════════════════════════════════════════════
+   Fields — wells pressed into the clay
+   ════════════════════════════════════════════════════════ */
+.ff-field { display: flex; flex-direction: column; gap: 5px; }
+.ff-label {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ff-input, .ff-textarea, .ff-select__trigger {
+  width: 100%; border: 0; outline: 0; border-radius: var(--r-sm);
+  background: var(--well); color: var(--ink);
+  font-family: var(--font-ui); font-size: var(--fs-sm); font-weight: 500;
+  padding: 8px 10px;
+  box-shadow: inset 1px 2px 3px rgba(var(--shade-rgb), .13), inset 0 -1px 0 var(--rim);
+  transition: box-shadow var(--t-fast), background var(--t-fast);
+}
+.ff-input::placeholder, .ff-textarea::placeholder { color: var(--ink-3); opacity: .8; }
+.ff-input:focus, .ff-textarea:focus, .ff-select__trigger.is-open {
+  background: var(--face-hi);
+  box-shadow: inset 1px 2px 3px rgba(var(--shade-rgb), .08), 0 0 0 2px var(--cat, var(--focus));
+}
+.ff-textarea { resize: vertical; line-height: 1.55; min-height: 56px; }
+.ff-textarea--code, .ff-input--code { font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+.ff-select { position: relative; width: 100%; }
+.ff-select__trigger { display: flex; align-items: center; justify-content: space-between; cursor: pointer; text-align: left; }
+.ff-select__trigger svg { color: var(--ink-3); transition: transform var(--t-fast) var(--ease); }
+.ff-select__trigger.is-open svg { transform: rotate(180deg); }
+.ff-select__menu {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 100; padding: 4px;
+  max-height: 168px; overflow-y: auto; border-radius: var(--r-md);
+  background: var(--face-hi);
+  box-shadow: inset 0 1px 0 var(--rim), 0 0 0 1px var(--rule), 6px 14px 24px -8px rgba(var(--shade-rgb), .35);
+  animation: ff-pop var(--t-fast) var(--ease);
+}
+.ff-select__option {
+  padding: 7px 10px; border-radius: 7px; cursor: pointer; font-size: var(--fs-xs); font-weight: 500; color: var(--ink-2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ff-select__option:hover { background: var(--face-2); color: var(--ink); }
+.ff-select__option[aria-selected="true"] { color: var(--ink); font-weight: 700; }
+.ff-select__option[aria-selected="true"]::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cat, var(--accent)); }
+
+/* {{variable}} tokens */
+.ff-vars { display: flex; flex-wrap: wrap; gap: 5px; }
+.ff-var {
+  font-family: var(--font-mono); font-size: var(--fs-2xs); padding: 3px 8px; border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--cat-shape) 18%, var(--face)); color: var(--ink);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cat-shape) 45%, transparent);
+}
+
+/* ════════════════════════════════════════════════════════
+   Handles — glossy beads (the dots on the reference wires)
+   ════════════════════════════════════════════════════════ */
+.ff-port {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2.5px solid var(--face);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.75) 0 16%, var(--cat) 58%, color-mix(in oklch, var(--cat), black 22%));
+  box-shadow: 1px 2px 4px rgba(var(--shade-rgb), .35), 0 0 0 1px rgba(var(--shade-rgb), .1);
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast);
+}
+.ff-port:hover { transform: translateY(-50%) scale(1.35); box-shadow: 0 0 0 5px color-mix(in oklch, var(--cat) 25%, transparent), 1px 2px 4px rgba(var(--shade-rgb), .35); }
+.ff-port--in { left: -8px; }
+.ff-port--out { right: -8px; }
+.ff-port.is-target { box-shadow: 0 0 0 6px color-mix(in oklch, var(--cat-check) 35%, transparent); }
+.ff-handle-label {
+  position: absolute; transform: translateY(-140%); pointer-events: none; white-space: nowrap;
+  font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-3); letter-spacing: .04em;
+}
+.ff-handle-label--in { right: calc(100% + 12px); }
+.ff-handle-label--out { left: calc(100% + 12px); }
+
+/* ════════════════════════════════════════════════════════
+   Canvas, wires, floating glass instruments
+   ════════════════════════════════════════════════════════ */
+.ff-flow {
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(1100px 760px at 12% -8%, var(--light-pool), transparent 62%),
+    radial-gradient(900px 700px at 105% 110%, rgba(var(--shade-rgb), .06), transparent 60%),
+    var(--ground);
+}
+.ff-wire__path { stroke: var(--wire); stroke-width: 1.75; transition: stroke var(--t-fast), stroke-width var(--t-fast); }
+.ff-wire:hover .ff-wire__path,
+.ff-wire.is-selected .ff-wire__path { stroke: var(--wire-hover); stroke-width: 2.5; }
+.ff-wire__path { stroke-dasharray: 2 7; stroke-linecap: round; stroke-width: 2.25; }
+.ff-live .ff-wire__path { stroke: var(--wire-live); }
+.ff-wire--draft .ff-wire__path { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 5; }
+
+.ff-glass, .ff-zoom, .ff-minimap {
+  background: var(--glass) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+  border-radius: var(--r-md); overflow: hidden;
+  box-shadow: inset 0 1px 0 var(--rim), 0 0 0 1px var(--rule), 6px 14px 26px -10px rgba(var(--shade-rgb), .35) !important;
+}
+.ff-zoom { padding: 3px; border-radius: var(--r-pill); display: flex; flex-direction: column; gap: 2px; }
+.ff-zoom button {
+  width: 30px; height: 30px; border: 0 !important; border-radius: 50%; background: transparent !important; color: var(--ink-2);
+}
+.ff-zoom button svg { fill: currentColor; max-width: 11px; max-height: 11px; }
+.ff-zoom button:hover { background: var(--face-2) !important; color: var(--ink); }
+.ff-minimap__mask { fill: color-mix(in oklch, var(--ground) 70%, transparent); }
+.ff-minimap__node { stroke: none; }
+.ff-panel { margin: var(--sp-4); }
+
+/* Empty-state invitation, centred on the bench */
+.ff-empty {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 4;
+}
+.ff-empty__card {
+  text-align: center; max-width: 360px; padding: var(--sp-6);
+}
+.ff-empty__title { font-family: var(--font-display); font-weight: 900; font-size: 30px; letter-spacing: -0.03em; line-height: 1; text-transform: uppercase; color: var(--ink); margin: 14px 0 10px; }
+.ff-empty__body { font-size: var(--fs-md); color: var(--ink-2); line-height: 1.55; margin: 0; }
+.ff-empty__ghost { display: flex; justify-content: center; gap: 14px; }
+.ff-empty__ghost span {
+  width: 54px; height: 38px; border-radius: 10px; background: var(--face);
+  box-shadow: inset 0 1px 0 var(--rim), 0 4px 0 var(--edge), 4px 10px 14px -6px rgba(var(--shade-rgb), .3);
+  animation: ff-float 4s var(--ease) infinite;
+}
+.ff-empty__ghost span:nth-child(2) { animation-delay: .4s; transform: translateY(-6px); }
+.ff-empty__ghost span:nth-child(3) { animation-delay: .8s; }
+
+/* Status dock (bottom-centre run summary) */
+.ff-dock {
+  display: inline-flex; align-items: center; gap: var(--sp-3); padding: 6px 8px 6px 14px; border-radius: var(--r-pill);
+  font-size: var(--fs-xs); color: var(--ink-2);
+}
+.ff-dock__stat { font-family: var(--font-mono); font-size: var(--fs-2xs); letter-spacing: .06em; color: var(--ink-3); }
+.ff-dock__stat b { color: var(--ink); font-weight: 600; }
+
+/* ════════════════════════════════════════════════════════
+   Sheets (modals) and toasts
+   ════════════════════════════════════════════════════════ */
+.ff-scrim {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: var(--sp-4);
+  background: color-mix(in oklch, var(--ground) 55%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  animation: ff-fade var(--t-med) var(--ease);
+}
+.ff-sheet {
+  width: 100%; max-width: 440px; border-radius: 22px; overflow: hidden;
+  background: linear-gradient(165deg, var(--face-hi), var(--face) 45%);
+  box-shadow: inset 0 1px 0 var(--rim), 0 8px 0 var(--edge), 0 9px 0 rgba(var(--shade-rgb), .08),
+              20px 40px 60px -20px rgba(var(--shade-rgb), .45);
+  animation: ff-rise var(--t-med) var(--ease);
+}
+.ff-sheet__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 20px 22px 6px; }
+.ff-sheet__title { font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: -0.02em; margin: 0; color: var(--ink); }
+.ff-sheet__body { padding: 12px 22px 20px; display: flex; flex-direction: column; gap: var(--sp-4); }
+.ff-sheet__text { font-size: var(--fs-md); line-height: 1.6; color: var(--ink-2); margin: 0; white-space: pre-line; }
+.ff-sheet__foot { display: flex; justify-content: flex-end; gap: var(--sp-2); padding: 14px 22px 20px; }
+
+.ff-banner { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r-md); }
+.ff-banner--ok { background: var(--st-done-bg); color: var(--st-done-fg); }
+.ff-banner--warn { background: var(--st-warn-bg); color: var(--st-warn-fg); }
+.ff-banner--error { background: var(--st-wait-bg); color: var(--st-wait-fg); }
+.ff-banner__title { font-weight: 800; font-size: var(--fs-sm); margin: 0 0 2px; }
+.ff-banner__text { font-size: var(--fs-xs); line-height: 1.5; margin: 0; opacity: .9; }
+
+.ff-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.ff-metric {
+  padding: 14px; border-radius: var(--r-md); background: var(--well); text-align: left;
+  box-shadow: inset 1px 2px 4px rgba(var(--shade-rgb), .12), inset 0 -1px 0 var(--rim);
+}
+.ff-metric__value { font-family: var(--font-display); font-weight: 900; font-size: var(--fs-num); line-height: 1; letter-spacing: -0.03em; color: var(--ink); margin-top: 6px; }
+
+.ff-toast {
+  position: absolute; left: var(--sp-4); bottom: var(--sp-4); z-index: 10; width: 360px; max-width: calc(100% - 32px);
+  border-radius: var(--r-lg); animation: ff-rise var(--t-med) var(--ease);
+}
+.ff-toast__head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 4px; }
+.ff-toast__body { padding: 4px 14px 14px; font-size: var(--fs-sm); color: var(--ink-2); line-height: 1.5; }
+
+.ff-spinner { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; animation: ff-spin .7s linear infinite; display: inline-block; }
+
+/* ════════════════════════════════════════════════════════
+   Motion — every animation earns a sentence (docs/design.md)
+   ════════════════════════════════════════════════════════ */
+@keyframes ff-spin { to { transform: rotate(360deg); } }
+@keyframes ff-pulse { 50% { transform: scale(1.6); opacity: .4; } }
+@keyframes ff-breathe { 0%, 100% { transform: scale(1); opacity: .5; } 50% { transform: scale(1.08); opacity: 0; } }
+@keyframes ff-fade { from { opacity: 0; } }
+@keyframes ff-rise { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+@keyframes ff-pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+@keyframes ff-float { 50% { transform: translateY(-8px); } }
+@keyframes ff-dash { to { stroke-dashoffset: -18; } }
+.ff-node.is-entering { animation: ff-rise var(--t-med) var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
+
+/* Theme switch: colour properties only */
+.ff-theme-anim, .ff-theme-anim * { transition: background-color var(--t-med), color var(--t-med), box-shadow var(--t-med) !important; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--edge-2); border-radius: 6px; }
+.ff-empty__cta { margin-top: var(--sp-5); pointer-events: auto; }
+
+/* Native controls pick up the node's category */
+input[type="range"], input[type="checkbox"], input[type="radio"] { accent-color: var(--cat); }
+
+/* ════════════════════════════════════════════════════════
+   Canvas engine structure (replaces reactflow/dist/style.css)
+   DOM: .ff-flow > .ff-flow__grid(svg) + .ff-viewport > (.ff-wires(svg) + .ff-nodes > .ff-node-pos > .ff-node)
+   ════════════════════════════════════════════════════════ */
+.ff-flow { position: relative; overflow: hidden; touch-action: none; user-select: none; cursor: default; }
+.ff-flow.is-panning { cursor: grabbing; }
+.ff-flow__grid { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ff-flow__grid circle { fill: var(--grid-dot); }
+.ff-viewport { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.ff-wires { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.ff-wire { pointer-events: visibleStroke; cursor: pointer; }
+.ff-wire__path { fill: none; }
+.ff-wire__hit { fill: none; stroke: transparent; stroke-width: 14; }
+.ff-live .ff-wire__path { animation: ff-dash .6s linear infinite; }
+.ff-nodes { position: absolute; left: 0; top: 0; }
+.ff-node-pos { position: absolute; left: 0; top: 0; }
+.ff-node-pos .ff-node { cursor: grab; }
+.ff-node-pos input, .ff-node-pos textarea, .ff-node-pos select, .ff-node-pos button { user-select: text; cursor: auto; }
+.ff-node-pos button { cursor: pointer; }
+.ff-port { position: absolute; top: 50%; transform: translateY(-50%); cursor: crosshair; z-index: 2; padding: 0; }
+.ff-panel { position: absolute; z-index: 5; }
+.ff-panel--tl { top: 0; left: 0; } .ff-panel--tr { top: 0; right: 0; }
+.ff-panel--bl { bottom: 0; left: 0; } .ff-panel--br { bottom: 0; right: 0; }
+.ff-panel--bc { bottom: 0; left: 50%; transform: translateX(-50%); }
+.ff-minimap { width: 200px; height: 140px; }
+.ff-minimap svg { display: block; width: 100%; height: 100%; cursor: pointer; }
+.ff-minimap__view { fill: none; stroke: var(--ink-3); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+
+/* canvas engine additions */
+.ff-zoom button { display: grid; place-items: center; padding: 0; cursor: pointer; }
+.ff-zoom__btn .ff-icon { display: grid; place-items: center; }
+.ff-flow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ff-minimap__node { opacity: .85; }
+.ff-zoom__btn svg { display: block; width: 11px; height: 11px; }

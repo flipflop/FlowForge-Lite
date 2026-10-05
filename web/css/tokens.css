@@ -1,0 +1,128 @@
+/* tokens.css — FlowForge "Clay Workbench" design tokens. The single source of truth.
+   Tokens on :root (light), redefined for dark. Components never hardcode colour.
+   Light source: top-left. Every shadow falls down and to the right. See docs/design.md. */
+
+
+:root {
+  /* ── Type ───────────────────────────────────────────── */
+  --font-display: 'Archivo', 'Inter Tight', system-ui, sans-serif;
+  --font-ui: 'Manrope', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --fs-2xs: 10px;  /* mono labels, ids */
+  --fs-xs: 11px;   /* field text, pills */
+  --fs-sm: 12px;   /* buttons, body */
+  --fs-md: 13px;   /* node titles */
+  --fs-lg: 15px;   /* sheet titles */
+  --fs-xl: 22px;   /* brand */
+  --fs-num: 34px;  /* metric numerals */
+  --track-mono: 0.08em;
+
+  /* ── Space / radius / motion ───────────────────────── */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 18px; --r-pill: 999px;
+  --slab: 6px;                      /* visible thickness of a card */
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --t-fast: 140ms; --t-med: 260ms;
+
+  /* ── Surfaces (light: warm paper studio) ───────────── */
+  --ground: #F2EFE8;
+  --ground-2: #EAE5DA;              /* bands: header, toolbar */
+  --light-pool: rgba(255, 253, 247, 0.9); /* lamp glow on the canvas, top-left */
+  --grid-dot: #D6CFC1;
+  --face: #FBF9F4;                  /* top face of a slab */
+  --face-hi: #FFFEFA;               /* lit corner of the face */
+  --face-2: #F4F0E7;                /* recessed header strip */
+  --edge: #E0D9CB;                  /* slab side */
+  --edge-2: #CFC6B5;                /* sheet stacked beneath */
+  --well: #EFEBE2;                  /* pressed-in input */
+  --rule: #E4DED2;
+  --rim: rgba(255, 255, 255, 0.95); /* top-edge highlight */
+  --shade-rgb: 52, 44, 30;          /* warm shadow */
+  --glass: rgba(251, 249, 244, 0.72);
+
+  /* ── Ink ───────────────────────────────────────────── */
+  --ink: #16233A;                   /* navy, from the reference */
+  --ink-2: #46516A;
+  --ink-3: #7C8397;                 /* meta only, ≥4.5:1 on face */
+  --on-ink: #FBF9F4;
+
+  /* ── Accent: coral is the one hot mark (Run, LLM, focus) ── */
+  --accent: #E2654F;
+  --accent-deep: #C24E3A;
+  --accent-soft: #FBE3DC;
+  --on-accent: #FFFDF9;
+  --focus: #E2654F;
+
+  /* ── Go: green is reserved for Run ── */
+  --go: #23854F; --go-hi: #37A065; --go-deep: #17613A; --on-go: #FFFFFF;
+
+  /* ── Category hues (functionally coded — one per node family) ── */
+  --cat-source: #4C6A96;   /* Input, Database, API — where data comes from */
+  --cat-model: #E2654F;    /* LLM — the hub */
+  --cat-shape: #D9A23B;    /* Text, Transform, Filter — reshaping */
+  --cat-check: #5E9C7E;    /* Validator — gates */
+  --cat-sink: #1F2E4A;     /* Output — where it lands */
+
+  /* ── Status pills (always with a text label) ───────── */
+  --st-ready-bg: #ECE8DF;  --st-ready-fg: #6B7286;
+  --st-work-bg: #DCEFE4;   --st-work-fg: #2E6B4E;
+  --st-done-bg: #D3E9DC;   --st-done-fg: #245A40;
+  --st-wait-bg: #FBE1D9;   --st-wait-fg: #A6402D;
+  --st-warn-bg: #FBEFC9;   --st-warn-fg: #8A6410;
+
+  /* ── Edges ─────────────────────────────────────────── */
+  --wire: #3A4760;
+  --wire-hover: var(--accent);
+  --wire-live: var(--cat-check);
+
+  --cat: var(--cat-source);
+  color-scheme: light;
+}
+
+/* ── Dark: night studio. Same lamp, lower light. ────── */
+:root[data-theme="dark"] {
+  --ground: #11151D;
+  --ground-2: #161B25;
+  --light-pool: rgba(120, 140, 180, 0.10);
+  --grid-dot: #262D3A;
+  --face: #222A37;
+  --face-hi: #2A3342;
+  --face-2: #1C2330;
+  --edge: #141922;
+  --edge-2: #0C1017;
+  --well: #181E29;
+  --rule: #303949;
+  --rim: rgba(255, 255, 255, 0.07);
+  --shade-rgb: 0, 0, 0;
+  --glass: rgba(30, 37, 49, 0.72);
+
+  --ink: #ECE8DF;
+  --ink-2: #B7BBC6;
+  --ink-3: #8A90A0;
+  --on-ink: #11151D;
+
+  --accent: #F07A63;
+  --accent-deep: #E2654F;
+  --accent-soft: #3A2622;
+  --on-accent: #1A0F0C;
+  --focus: #F07A63;
+  --go: #4FBF84; --go-hi: #6FD39C; --go-deep: #2C7F55; --on-go: #0E1A13;
+
+  --cat-source: #7E9CCB;
+  --cat-model: #F07A63;
+  --cat-shape: #E6B65A;
+  --cat-check: #7DBB9C;
+  --cat-sink: #C9D3E6;
+
+  --st-ready-bg: #2A3140;  --st-ready-fg: #A3A9B7;
+  --st-work-bg: #1F3A2E;   --st-work-fg: #8FD3B0;
+  --st-done-bg: #1D3529;   --st-done-fg: #9BD9B8;
+  --st-wait-bg: #43251F;   --st-wait-fg: #F4A797;
+  --st-warn-bg: #3D3219;   --st-warn-fg: #EBC56E;
+
+  --wire: #8E9AB3;
+
+  --cat: var(--cat-source);
+  color-scheme: dark;
+}
+

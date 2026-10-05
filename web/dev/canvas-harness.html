@@ -1,0 +1,93 @@
+<!doctype html>
+<!--
+  canvas-harness.html — standalone test page for js/services/canvas.js.
+  Why: lets the engine be exercised with STUB cards, before the real node bodies exist.
+  Uses the real store + css. `?selftest=1` scripts pointer events and prints PASS/FAIL
+  into document.title (read with headless Chrome --dump-dom).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>canvas harness</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/app.css">
+<style>html, body { height: 100%; margin: 0; } #app { position: fixed; inset: 0; }</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+const SELFTEST = new URLSearchParams(location.search).has('selftest');
+if (SELFTEST) {
+  // headless virtual-time Chrome stops delivering rAF once the page is idle; shim for deterministic tests
+  window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 8);
+  window.cancelAnimationFrame = (id) => clearTimeout(id);
+}
+import { createFlowStore } from '../js/services/store.js';
+import { createCanvas } from '../js/services/canvas.js';
+import { categoryForNodeType } from '../js/nodes/categories.js';
+import { MiniMap } from '../js/components/MiniMap.js';
+import { ZoomControls } from '../js/components/ZoomControls.js';
+
+// Stub ports per node type: [inputs, outputs] handle suffixes.
+const PORTS = {
+  customInput: [[], ['value']], text: [['topic'], ['output']], llm: [['system', 'prompt'], ['response', 'usage']],
+  customOutput: [['value'], []],
+};
+const ROW = 28, HEAD = 56;
+
+function renderNode(node) {
+  const [ins, outs] = PORTS[node.type] || [['in'], ['out']];
+  const rows = Math.max(ins.length, outs.length, 1);
+  const el = document.createElement('div');
+  el.className = 'ff-node';
+  el.dataset.cat = categoryForNodeType(node.type);
+  el.style.width = '260px';
+  el.style.height = `${HEAD + rows * ROW + 24}px`;
+  el.innerHTML = `<div class="ff-node__head"><div class="ff-node__titles"><div class="ff-node__title"></div><div class="ff-node__id"></div></div></div>`;
+  el.querySelector('.ff-node__title').textContent = node.type;
+  el.querySelector('.ff-node__id').textContent = node.id;
+  const port = (dir, name, i) => {
+    const b = document.createElement('button');
+    b.className = `ff-port ff-port--${dir}`;
+    b.dataset.handle = `${node.id}-${name}`;
+    b.dataset.node = node.id;
+    b.setAttribute('aria-label', `${name} ${dir === 'in' ? 'input' : 'output'}`);
+    b.style.top = `${HEAD + i * ROW + ROW / 2}px`;
+    el.append(b);
+  };
+  ins.forEach((n, i) => port('in', n, i));
+  outs.forEach((n, i) => port('out', n, i));
+  const badge = el.querySelector('.ff-node__id');
+  return { el, setRun: (r) => { badge.textContent = `${node.id} · ${r.status}`; } };
+}
+
+const store = createFlowStore();
+store.loadExample();
+const root = document.getElementById('app');
+const canvas = createCanvas(root, { store, renderNode, snap: 20 });
+window.__errs = []; addEventListener('error', e => window.__errs.push(e.message)); addEventListener('unhandledrejection', e => window.__errs.push(String(e.reason)));
+window.__ff = { store, canvas, root };
+
+function panel(cls, child) {
+  const p = document.createElement('div');
+  p.className = `ff-panel ${cls}`;
+  p.append(child);
+  root.append(p);
+}
+panel('ff-panel--br', MiniMap({ canvas, store }));
+panel('ff-panel--bl', ZoomControls({ canvas }));
+canvas.fitView({ padding: 0.3 });
+
+if (SELFTEST) {
+  // headless Chrome only produces frames on visual damage; a ticking dot keeps rAF alive
+  document.head.insertAdjacentHTML('beforeend', '<style>@keyframes tick{to{opacity:.3}}#tick{position:fixed;top:0;left:0;width:4px;height:4px;background:red;animation:tick .05s infinite alternate;z-index:99}</style>');
+  document.body.insertAdjacentHTML('beforeend', '<div id=tick></div>');
+  const { runSelfTest } = await import('./canvas-selftest.js');
+  runSelfTest(window.__ff);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+/* base.css — reset + element defaults. Consumes only tokens. */
+/* ════════════════════════════════════════════════════════
+   Base
+   ════════════════════════════════════════════════════════ */
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+*, *::before, *::after { box-sizing: border-box; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); letter-spacing: var(--track-mono); }
+.ff-eyebrow {
+  font-family: var(--font-mono); font-size: var(--fs-2xs); font-weight: 500;
+  letter-spacing: var(--track-mono); text-transform: uppercase; color: var(--ink-3);
+}
+
