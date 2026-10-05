@@ -1,4 +1,4 @@
-# FlowForge
+# FlowForge Lite
 
 **Design LLM pipelines on a canvas, validate them as a DAG, and run them with Gemini or Claude.** Results stream back node by node.
 
@@ -6,7 +6,7 @@
 
 <!-- Add a demo GIF here: docs/demo.gif -->
 
-> **A lightweight fork.** This is a fork of the original FlowForge by Nischalgouda (MIT). The React 18 / ReactFlow / zustand / Create React App frontend has been rewritten as plain ES modules with no npm, no build step and no third-party frontend code. The original checkout with `node_modules` was about **440 MB**; this whole repository is about **0.5 MB**, and the frontend (fonts included) is under 400 KB. There is nothing to `npm install` and nothing to `npm audit`. The UI also has a new design system, "Clay Workbench", with light and dark themes.
+> **The lightweight FlowForge.** FlowForge Lite is a fork of the original FlowForge by Nischalgouda (MIT). The React 18 / ReactFlow / zustand / Create React App frontend has been rewritten as plain ES modules with no npm, no build step and no third-party frontend code. The original checkout with `node_modules` was about **440 MB**; this whole repository is about **0.5 MB**, and the frontend (fonts included) is under 400 KB. There is nothing to `npm install` and nothing to `npm audit`. The UI also has a new design system, "Clay Workbench", with light and dark themes.
 
 Everything runs behind one CloudFront distribution (see [deploy/](deploy/README.md)): the static frontend comes from a private S3 bucket and the FastAPI backend runs on AWS Lambda, reached at the same origin under `/pipelines/*`, `/models` and `/health`. Add your own key under **API Keys** to run without the shared demo keys, which are optional and rate limited per IP.
 

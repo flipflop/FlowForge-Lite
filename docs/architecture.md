@@ -1,4 +1,4 @@
-# FlowForge architecture
+# FlowForge Lite architecture
 
 The architecture reference is [architecture.html](architecture.html): a self-contained page with diagrams of the system context, frontend layering, component tree, canvas engine, state, persistence and payloads, run lifecycle, backend, design system, testing, deployment and security. It prints to PDF.
 

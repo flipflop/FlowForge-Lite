@@ -60,7 +60,7 @@ if [[ "$mode" != "--static-only" ]]; then
     --no-fail-on-empty-changeset --no-confirm-changeset --tags "project=$STACK_NAME" \
     --parameter-overrides \
       "OriginVerifySecret=$ORIGIN_VERIFY_SECRET" \
-      "SsmPrefix=${SSM_PREFIX:-/flowforge/prod}" \
+      "SsmPrefix=${SSM_PREFIX:-/flowforge-lite/prod}" \
       "ReservedConcurrency=${RESERVED_CONCURRENCY:-5}" \
       "RunsPerHour=${RUNS_PER_HOUR:-10}" \
       "HostName=${HOST_NAME:-}" "CertificateArn=${CERTIFICATE_ARN:-}"

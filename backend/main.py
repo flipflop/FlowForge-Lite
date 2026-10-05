@@ -20,7 +20,7 @@ try:  # local dev only; the Lambda bundle ships without python-dotenv
 except ImportError:
     pass
 
-app = FastAPI(title="FlowForge API")
+app = FastAPI(title="FlowForge Lite API")
 
 # In production the page and API share one origin (CloudFront), so CORS is not involved.
 # These defaults are the local static dev server; override with a comma-separated list.
@@ -134,7 +134,7 @@ def health():
 
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "FlowForge API"}
+    return {"status": "ok", "service": "FlowForge Lite API"}
 
 
 @app.get("/models")

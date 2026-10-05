@@ -1,4 +1,4 @@
-# FlowForge design constitution — "Clay Workbench"
+# FlowForge Lite design constitution — "Clay Workbench"
 
 If code and this document disagree, this document wins. Tokens and component classes live in
 `frontend/src/theme.css`; components never hardcode a colour, font or shadow.

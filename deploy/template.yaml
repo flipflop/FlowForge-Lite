@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  FlowForge on one CloudFront distribution: the static frontend (web/) from a private S3 bucket
+  FlowForge Lite on one CloudFront distribution: the static frontend (web/) from a private S3 bucket
   through Origin Access Control, and the FastAPI backend on Lambda (Function URL, response
   streaming) under /pipelines/*, /models and /health. Deploy with deploy/deploy.sh (SAM).
   No account-specific values live in this file; they come from pseudo parameters and
@@ -17,7 +17,7 @@ Parameters:
       so the public Function URL cannot be used directly. deploy.sh generates it.
   SsmPrefix:
     Type: String
-    Default: /flowforge/prod
+    Default: /flowforge-lite/prod
     Description: >
       SSM Parameter Store prefix holding optional server demo keys (SecureString):
       <prefix>/gemini-api-key and <prefix>/anthropic-api-key. Written by deploy/set-secrets.sh.

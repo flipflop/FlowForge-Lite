@@ -12,7 +12,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
 source "$here/deploy.env"
 export AWS_PROFILE AWS_REGION
-prefix="${SSM_PREFIX:-/flowforge/prod}"; prefix="${prefix%/}"
+prefix="${SSM_PREFIX:-/flowforge-lite/prod}"; prefix="${prefix%/}"
 
 acct="$(aws sts get-caller-identity --query Account --output text)"
 [[ "$acct" == "$EXPECTED_ACCOUNT" ]] || { echo "refusing: wrong account"; exit 1; }

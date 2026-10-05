@@ -18,6 +18,7 @@ export function Header({ theme, layout, onLayout, onToggleTheme, hasKeys, onSett
       <div class="ff-brand">
         <span class="ff-brand__mark"></span>
         <h1 class="ff-brand__name" style="margin:0">Flow<em>Forge</em></h1>
+        <span class="ff-brand__lite" aria-label="Lite">Lite</span>
         <span class="ff-eyebrow ff-brand__tag">Pipeline workbench</span>
       </div>
       <div class="ff-header__actions">

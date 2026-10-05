@@ -455,3 +455,10 @@ input[type="range"], input[type="checkbox"], input[type="radio"] { accent-color:
 .ff-flow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .ff-minimap__node { opacity: .85; }
 .ff-zoom__btn svg { display: block; width: 11px; height: 11px; }
+
+/* Product mark: FlowForge Lite (the lightweight fork) */
+.ff-brand__lite {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent-deep); padding: 3px 8px; border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 1.5px var(--accent); background: var(--accent-soft);
+}

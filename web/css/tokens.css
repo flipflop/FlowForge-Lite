@@ -1,4 +1,4 @@
-/* tokens.css — FlowForge "Clay Workbench" design tokens. The single source of truth.
+/* tokens.css — FlowForge Lite "Clay Workbench" design tokens. The single source of truth.
    Tokens on :root (light), redefined for dark. Components never hardcode colour.
    Light source: top-left. Every shadow falls down and to the right. See docs/design.md. */
 
